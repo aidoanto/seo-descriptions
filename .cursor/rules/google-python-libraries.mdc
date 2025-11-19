@@ -1,0 +1,135 @@
+---
+alwaysApply: false
+---
+
+For a **Python developer** wishing to use **Google Gemini's best features via API in 2025**, the recommended library is **google-genai**. This is the official, up-to-date SDK for accessing Gemini and other Google generative AI models.
+
+**Key points:**
+
+- **Use `google-genai` for all new Python projects.**
+  - Install with:  
+    ```bash
+    pip install -U google-genai
+    ```
+  - Example usage:
+    ```python
+    from google import genai
+
+    client = genai.Client()
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents="Explain how AI works in a few words",
+    )
+    print(response.text)
+    ```
+
+
+- **Deprecated/legacy libraries:**
+  - `google-cloud-aiplatform` (Vertex AI Python SDK, GenerativeModel module) is **deprecated** for generative AI as of May 2026[1][2].
+  - The older Gemini Python SDKs (sometimes called `generative-ai-python` or similar) are **deprecated** and no longer receive new features or active development[3][4]. Only critical bug fixes are provided until their end-of-life.
+  - The Vertex AI SDK (`google-cloud-aiplatform`) will lose generative AI support after June 2026[2].
+
+- **Why the confusion?**
+  - Google initially offered **multiple SDKs** for accessing generative AI: Vertex AI SDKs, Gemini-specific SDKs, and others, each with slightly different APIs and model support.
+  - With the release of **Gemini 2.0**, Google unified these into the **Google Gen AI SDK** (`google-genai` for Python), aiming to provide a single, consistent interface for all generative AI models (Gemini, Veo, Imagen, etc.)[1][3][4].
+  - As a result, all new documentation, features, and model improvements are focused on the `google-genai` SDK, and developers are strongly encouraged to migrate to it[1][5][6][2].
+
+- **Other options:**
+  - If you are already using the **OpenAI Python library** (`openai`), you can point it to the Gemini API endpoint with minimal changes[7]. However, for full access to Gemini's unique features and latest models, Google recommends using their own `google-genai` SDK.
+
+**Summary Table: Python Libraries for Gemini API**
+
+| Library Name                    | Status (2025)     | Use for New Projects? | Notes                                                         |
+|---------------------------------|-------------------|-----------------------|---------------------------------------------------------------|
+| `google-genai`                  | Active/Recommended| Yes                   | Unified SDK; all new features and models                      |
+| `google-cloud-aiplatform`       | Deprecated        | No                    | Vertex AI generative modules deprecated May 2026              |
+| `generative-ai-python` (legacy) | Deprecated        | No                    | No new features; end-of-life approaching                      |
+| `openai` (with Gemini endpoint) | Supported         | Optional              | For OpenAI API compatibility; not all Gemini features exposed |
+
+**Bottom line:**  
+**Always use `google-genai` for new Python projects with Google Gemini.** Avoid the deprecated libraries, and migrate existing code to the new SDK to ensure continued support and access to the latest capabilities[8][1][5][6][2][4].
+
+The **google-generativeai** library was the **original official Python SDK** for accessing Google's generative AI models, including Gemini and PaLM. It provided features such as text and multimodal (text-and-image) generation, multi-turn chat, and embeddings, making it the main entry point for developers building with Gemini from late 2023 through early 2025[1][2].
+
+**Why was it a different library?**
+- **google-generativeai** was designed specifically for the **first-generation Gemini API** and related models. It was built to quickly enable developers to experiment with and deploy generative AI features, but as Google's model offerings and feature set expanded (especially with Gemini 2.0 and beyond), the library's architecture became limiting for new capabilities[3][4].
+- Feedback from developers and the need for a **unified, future-proof SDK** led Google to develop a new library, **google-genai**, which now serves as the single interface for all generative AI models (Gemini, Veo, Imagen, etc.) across both the Gemini Developer API and Vertex AI[3][4].
+
+**What happened to google-generativeai?**
+- As of mid-2025, **google-generativeai is deprecated**. Google has moved all new development, features, and documentation to the new **google-genai** SDK. The old library is now in **limited maintenance mode**, receiving only critical bug fixes until its end-of-life on August 31, 2025[3].
+- Developers are strongly encouraged to **migrate to google-genai** to access the latest models, features (like streaming, function calling, file uploads), and long-term support[3][4].
+
+**Summary Table: Python SDK Transition**
+
+| Library                | Purpose/Generation            | Status (2025)         | Notes                                                        |
+|------------------------|------------------------------|-----------------------|--------------------------------------------------------------|
+| google-generativeai    | Gemini 1.x, PaLM, early Gemini| Deprecated            | Limited maintenance; end-of-life August 31, 2025[3][4]       |
+| google-genai           | Gemini 2.0+, Veo, Imagen, etc.| Active/Recommended    | Unified SDK for all new features and models[3][4]            |
+
+**In short:**  
+**google-generativeai** was the first official Python SDK for Gemini and related models, but it is now deprecated in favor of **google-genai**, which was created to unify and modernize Google's generative AI SDKs for all current and future models[3][4].For a **Python developer** wishing to use **Google Gemini's best features via API in 2025**, the recommended library is **google-genai**. This is the official, up-to-date SDK for accessing Gemini and other Google generative AI models.
+
+**Key points:**
+
+- **Use `google-genai` for all new Python projects.**
+  - Install with:  
+    ```bash
+    pip install -U google-genai
+    ```
+  - Example usage:
+    ```python
+    from google import genai
+
+    client = genai.Client()
+    response = client.models.generate_content(
+        model="gemini-2.5-flash",
+        contents="Explain how AI works in a few words",
+    )
+    print(response.text)
+    ```
+
+
+- **Deprecated/legacy libraries:**
+  - `google-cloud-aiplatform` (Vertex AI Python SDK, GenerativeModel module) is **deprecated** for generative AI as of May 2026[1][2].
+  - The older Gemini Python SDKs (sometimes called `generative-ai-python` or similar) are **deprecated** and no longer receive new features or active development[3][4]. Only critical bug fixes are provided until their end-of-life.
+  - The Vertex AI SDK (`google-cloud-aiplatform`) will lose generative AI support after June 2026[2].
+
+- **Why the confusion?**
+  - Google initially offered **multiple SDKs** for accessing generative AI: Vertex AI SDKs, Gemini-specific SDKs, and others, each with slightly different APIs and model support.
+  - With the release of **Gemini 2.0**, Google unified these into the **Google Gen AI SDK** (`google-genai` for Python), aiming to provide a single, consistent interface for all generative AI models (Gemini, Veo, Imagen, etc.)[1][3][4].
+  - As a result, all new documentation, features, and model improvements are focused on the `google-genai` SDK, and developers are strongly encouraged to migrate to it[1][5][6][2].
+
+- **Other options:**
+  - If you are already using the **OpenAI Python library** (`openai`), you can point it to the Gemini API endpoint with minimal changes[7]. However, for full access to Gemini's unique features and latest models, Google recommends using their own `google-genai` SDK.
+
+**Summary Table: Python Libraries for Gemini API**
+
+| Library Name                    | Status (2025)     | Use for New Projects? | Notes                                                         |
+|---------------------------------|-------------------|-----------------------|---------------------------------------------------------------|
+| `google-genai`                  | Active/Recommended| Yes                   | Unified SDK; all new features and models                      |
+| `google-cloud-aiplatform`       | Deprecated        | No                    | Vertex AI generative modules deprecated May 2026              |
+| `generative-ai-python` (legacy) | Deprecated        | No                    | No new features; end-of-life approaching                      |
+| `openai` (with Gemini endpoint) | Supported         | Optional              | For OpenAI API compatibility; not all Gemini features exposed |
+
+**Bottom line:**  
+**Always use `google-genai` for new Python projects with Google Gemini.** Avoid the deprecated libraries, and migrate existing code to the new SDK to ensure continued support and access to the latest capabilities[8][1][5][6][2][4].
+
+The **google-generativeai** library was the **original official Python SDK** for accessing Google's generative AI models, including Gemini and PaLM. It provided features such as text and multimodal (text-and-image) generation, multi-turn chat, and embeddings, making it the main entry point for developers building with Gemini from late 2023 through early 2025[1][2].
+
+**Why was it a different library?**
+- **google-generativeai** was designed specifically for the **first-generation Gemini API** and related models. It was built to quickly enable developers to experiment with and deploy generative AI features, but as Google's model offerings and feature set expanded (especially with Gemini 2.0 and beyond), the library's architecture became limiting for new capabilities[3][4].
+- Feedback from developers and the need for a **unified, future-proof SDK** led Google to develop a new library, **google-genai**, which now serves as the single interface for all generative AI models (Gemini, Veo, Imagen, etc.) across both the Gemini Developer API and Vertex AI[3][4].
+
+**What happened to google-generativeai?**
+- As of mid-2025, **google-generativeai is deprecated**. Google has moved all new development, features, and documentation to the new **google-genai** SDK. The old library is now in **limited maintenance mode**, receiving only critical bug fixes until its end-of-life on August 31, 2025[3].
+- Developers are strongly encouraged to **migrate to google-genai** to access the latest models, features (like streaming, function calling, file uploads), and long-term support[3][4].
+
+**Summary Table: Python SDK Transition**
+
+| Library                | Purpose/Generation            | Status (2025)         | Notes                                                        |
+|------------------------|------------------------------|-----------------------|--------------------------------------------------------------|
+| google-generativeai    | Gemini 1.x, PaLM, early Gemini| Deprecated            | Limited maintenance; end-of-life August 31, 2025[3][4]       |
+| google-genai           | Gemini 2.0+, Veo, Imagen, etc.| Active/Recommended    | Unified SDK for all new features and models[3][4]            |
+
+**In short:**  
+**google-generativeai** was the first official Python SDK for Gemini and related models, but it is now deprecated in favor of **google-genai**, which was created to unify and modernize Google's generative AI SDKs for all current and future models[3][4].

@@ -1,0 +1,90 @@
+{
+    "workbench.colorTheme": "Default Dark Modern",
+    "explorer.confirmDragAndDrop": false,
+    "explorer.confirmDelete": false,
+    "github.copilot.enable": {
+        "*": true,
+        "plaintext": false,
+        "markdown": false,
+        "scminput": false
+    },
+    "jupyter.askForKernelRestart": false,
+    "git.autofetch": true,
+    "github.copilot.editor.enableAutoCompletions": true,
+    "editor.accessibilitySupport": "off",
+    "bigqueryRunner.defaultDataset.projectId": "unified-adviser-405623",
+    "bigqueryRunner.tree.projectIds": [
+        "unified-adviser-405623"
+    ],
+    "bigqueryRunner.defaultDataset.datasetId": "public",
+    "bigqueryRunner.location": "US",
+    "interactiveWindow.executeWithShiftEnter": true,
+    "cloudcode.project": "unified-adviser-405623",
+    "cursor.cpp.disabledLanguages": [
+        "plaintext",
+        "markdown",
+        "scminput"
+    ],
+    "redhat.telemetry.enabled": true,
+    "explorer.fileNesting.patterns": {
+        "*.ts": "${capture}.js",
+        "*.js": "${capture}.js.map, ${capture}.min.js, ${capture}.d.ts",
+        "*.jsx": "${capture}.js",
+        "*.tsx": "${capture}.ts",
+        "tsconfig.json": "tsconfig.*.json",
+        "package.json": "package-lock.json, yarn.lock, pnpm-lock.yaml, bun.lockb",
+        "*.sqlite": "${capture}.${extname}-*",
+        "*.db": "${capture}.${extname}-*",
+        "*.sqlite3": "${capture}.${extname}-*",
+        "*.db3": "${capture}.${extname}-*",
+        "*.sdb": "${capture}.${extname}-*",
+        "*.s3db": "${capture}.${extname}-*"
+    },
+    "remote.SSH.remotePlatform": {
+        "synology": "linux"
+    },
+    "terminal.integrated.enableMultiLinePasteWarning": false,
+    "cursor.cpp.enablePartialAccepts": true,
+    "editor.tabCompletion": "on",
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    "git.confirmSync": false,
+    "cursor.aipreview.enabled": true,
+    "cursor.composer.agentLoopOnLints": false,
+    "explorer.confirmPasteNative": false,
+    "diffEditor.hideUnchangedRegions.enabled": true,
+    "powershell.promptToUpdatePowerShell": false,
+    "cursor.general.globalCursorIgnoreList": [
+        "**/credentials.json",
+        "**/credentials.*.json",
+        "**/secret.json",
+        "**/secrets.json",
+        "**/*.key",
+        "**/*.pem",
+        "**/*.pfx",
+        "**/*.p12",
+        "**/*.crt",
+        "**/*.cer",
+        "**/id_rsa",
+        "**/id_dsa",
+        "**/.ssh/id_*"
+    ],
+    "database-client.autoSync": true,
+    "json.schemas": [],
+    "workbench.settings.applyToAllProfiles": [      
+    ],
+    "python.pipPath": "uv",
+    "python.terminal.activateEnvironment": true,
+    "python.terminal.shellIntegration.enabled": true,
+    "[python]": {
+        "editor.defaultFormatter": "ms-python.black-formatter",
+        "editor.formatOnSave": true
+      },
+    // Close tab when editor is no longer needed
+    "workbench.editor.closeOnFileDelete": true,
+
+    // Limit number of preview tabs
+    "workbench.editor.limit.enabled": true,
+    "workbench.editor.limit.perEditorGroup": 5,
+    // set default theme to synthwave
+    "workbench.colorTheme": "SynthWave '84"
+}

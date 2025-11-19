@@ -1,0 +1,143 @@
+# Gemini API Structured Output Guide
+
+The Gemini API supports structured output to guarantee JSON responses instead of unstructured text. This feature is essential for reliable data extraction and eliminates parsing errors.
+
+## Key Requirements
+
+### 1. Both `response_mime_type` AND `response_schema` are Required
+```python
+config=types.GenerateContentConfig(
+    response_mime_type="application/json",  # MUST include this
+    response_schema=response_schema,        # AND this
+    temperature=0.1
+)
+```
+
+**Without `response_mime_type`**: Gemini returns JSON wrapped in markdown code blocks:
+```
+```json
+{"data": "value"}
+```
+```
+
+**With `response_mime_type`**: Gemini returns clean JSON that can be parsed directly:
+```
+{"data": "value"}
+```
+
+### 2. Schema Limitations
+- ❌ `additionalProperties` is NOT supported
+- ❌ Dynamic object keys are NOT supported  
+- ✅ Arrays with structured items ARE supported
+- ✅ Objects with predefined properties ARE supported
+
+### 3. Recommended Pattern for Dynamic Collections
+
+**Instead of** (unsupported):
+```python
+# DON'T DO THIS - additionalProperties not supported
+response_schema = types.Schema(
+    type=types.Type.OBJECT,
+    additional_properties=types.Schema(type=types.Type.STRING)
+)
+```
+
+**Use array pattern** (supported):
+```python
+# DO THIS - use arrays for dynamic collections
+response_schema = types.Schema(
+    type=types.Type.OBJECT,
+    properties={
+        "items": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "key": types.Schema(type=types.Type.STRING),
+                    "value": types.Schema(type=types.Type.STRING)
+                },
+                required=["key", "value"]
+            )
+        )
+    },
+    required=["items"]
+)
+```
+
+## Complete Working Example
+
+```python
+from google import genai
+from google.genai import types
+import json
+
+# Define schema using array pattern
+response_schema = types.Schema(
+    type=types.Type.OBJECT,
+    properties={
+        "results": types.Schema(
+            type=types.Type.ARRAY,
+            items=types.Schema(
+                type=types.Type.OBJECT,
+                properties={
+                    "id": types.Schema(type=types.Type.INTEGER),
+                    "text": types.Schema(type=types.Type.STRING)
+                },
+                required=["id", "text"]
+            )
+        )
+    },
+    required=["results"]
+)
+
+# Make API call
+client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
+response = await client.aio.models.generate_content(
+    model="gemini-2.5-pro",
+    contents=[types.Content(role="user", parts=[types.Part.from_text(text=prompt)])],
+    config=types.GenerateContentConfig(
+        response_mime_type="application/json",  # Critical!
+        response_schema=response_schema,
+        temperature=0.1
+    )
+)
+
+# Parse response
+data = json.loads(response.text)
+results = data.get("results", [])
+```
+
+## Error Handling Best Practices
+
+Always include fallback parsing for robustness:
+
+```python
+try:
+    # Try structured JSON parsing first
+    response_data = json.loads(ai_response)
+    items = response_data.get("results", [])
+    
+    for item in items:
+        process_item(item)
+        
+except json.JSONDecodeError as e:
+    print(f"JSON parsing failed: {e}")
+    # Fallback to regex or other parsing methods
+    fallback_parse(ai_response)
+```
+
+## Common Pitfalls
+
+1. **Missing `response_mime_type`** → JSON wrapped in markdown
+2. **Using `additionalProperties`** → API error  
+3. **Forgetting `required` fields** → Incomplete responses
+4. **No fallback parsing** → Complete failure on edge cases
+
+## When to Use Structured Output
+
+- ✅ Data extraction tasks
+- ✅ Form filling
+- ✅ Classification with specific formats  
+- ✅ Any time you need reliable JSON parsing
+- ❌ Creative writing (use regular text generation)
+- ❌ Conversational responses (structured output reduces naturalness)

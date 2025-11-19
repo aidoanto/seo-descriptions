@@ -1,0 +1,42 @@
+{
+    "recommendations": [
+        // Python development
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.black-formatter",
+        "ms-python.isort",
+        "ms-python.flake8",
+        "ms-python.pylint",
+        // General development
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "ms-vscode.powershell",
+        // Docker and DevOps
+        "ms-azuretools.vscode-docker",
+        // Code quality and formatting
+        "ms-vscode.vscode-json",
+        "redhat.vscode-xml",
+        "ms-vscode-remote.remote-containers",
+        "ms-vscode.vscode-css-peek",
+        "ms-vscode.vscode-html-css-support",
+        // Terminal and shell
+        "ms-vscode.vscode-terminal-profiles",
+        "ms-vscode.powershell",
+        // Testing
+        "ms-python.pytest",
+        "ms-python.unittest",
+        // Environment and configuration
+        "ms-vscode.vscode-env",
+        "ms-vscode.vscode-dotenv",
+        // Other faves
+        "ms-toolsai.jupyter",
+        "ms-toolsai.vscode-jupyter-cell-tags",
+        "ms-toolsai.jupyter-keymap",
+        "anysphere.cursorpyright",
+        "anysphere.remote-wsl",
+        "Docter60.vscode-terminal-for-ubuntu",
+        "LinJun.sqlite-support",
+        "mechatroner.rainbow-csv",
+        "robbowen.synthwave-vscode",
+    ]
+}

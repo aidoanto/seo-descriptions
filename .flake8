@@ -1,0 +1,20 @@
+# Many teams and projects choose to ignore some common flake8 warnings and errors
+# because they are either too strict, stylistic, or not relevant to the project's goals.
+# Here are some of the most commonly ignored flake8 codes that "don't actually matter"
+# for many practical Python projects. You can add these to your .flake8 config if you wish.
+
+[flake8]
+# Ignore these codes:
+# E203: Whitespace before ':' (conflicts with Black autoformatter)
+# W503: Line break before binary operator (also conflicts with Black)
+# E501: Line too long (handled by Black or not a big deal for many teams)
+# E266: Too many leading '#' for block comment (stylistic)
+# E731: Do not assign a lambda expression, use a def (sometimes fine in practice)
+# F401: Module imported but unused (sometimes you want to import for side effects)
+# F841: Local variable assigned but never used (can be useful in interactive/dev code)
+
+ignore = E203, W503, E501, E266, E731, F401, F841
+
+# You can also set the max line length if you want, e.g.:
+max-line-length = 120
+
