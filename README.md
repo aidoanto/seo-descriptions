@@ -1,110 +1,70 @@
-# Template project
+# Lifeline Drupal Issue Audit
 
-This is my UV project template.
+We’re migrating the Lifeline Australia site into Drupal. Each new page needs to be free of obvious blockers before it can go live (broken links, legacy environments, placeholder copy, etc.).  
+This repo contains a CLI that crawls every URL listed in `seo-descriptions.csv` and reports any issues so the content team can fix them quickly.
 
-## What is a GitHub template repository?
+## What the script checks
 
-A **template repository** is a special type of GitHub repository that serves as a starting point for new projects. Think of it as a "project blueprint" that you can use to quickly create new repositories with the same structure, files, and initial setup.
+For every page in the CSV the CLI will:
 
-### How template repos differ from normal repos
+1. Confirm the page itself does not return a 404.
+2. Look for internal links that return HTTP 4xx/5xx (broken links).
+3. Flag absolute links that still point at the legacy dev/prod domains:  
+   `https://lla-drupal-app-prod.salmonground-819df123.australiaeast.azurecontainerapps.io`  
+   `https://lla-drupal-app-uat.victoriouspond-08331c17.australiaeast.azurecontainerapps.io`
+4. Flag absolute links to `https://lifeline.org.au`, `https://www.lifeline.org.au`, or `https://toolkit.lifeline.org.au` (other Lifeline subdomains such as `give.` or `fundraise.` are allowed).
+5. Detect any visible text that still says “lorem ipsum” or “placeholder”.
 
-**Template repository:**
+Every issue becomes one CSV row with the page URL, the issue type, and a short snippet showing what needs attention.
 
-- Has a "Use this template" button on GitHub
-- When someone uses it, GitHub creates a **completely new repository** (not a fork)
-- The new repo has no connection to the original template
-- Perfect for project starters, boilerplates, and reusable project structures
+> ℹ️ The crawler inspects only the content inside the page’s `<main>` tag (when present) so inline scripts, nav bars, and footer widgets won’t generate noisy findings.
 
-**Normal repository:**
+## Prerequisites
 
-- Can be forked, but forks maintain a connection to the original
-- Forked repos show "forked from" and can create pull requests back to the original
-- Better for collaborative development and contributions
+1. Copy `.env.example` to `.env` and fill in:
+   - `HTTP_USERNAME`
+   - `HTTP_PASSWORD`
+     (These are required for the Drupal Basic Auth wall.)
+2. Install dependencies using [uv](https://github.com/astral-sh/uv):
 
-### Working with this template
+   ```
+   cd /home/aido/projects/seo-descriptions
+   uv sync
+   ```
 
-#### If you want to use this template for a new project:
+That’s it—no LLM/API keys are needed anymore.
 
-1. Click the **"Use this template"** button on GitHub
-2. Choose a name for your new project
-3. GitHub will create a brand new repository with all the files from this template
-4. Clone your new repository and start coding!
-
-#### If you want to update the template itself:
-
-1. Make your changes directly in this repository
-2. Commit and push your changes
-3. The template is now updated for future users
-4. **Note:** Existing projects created from this template won't automatically get your updates
-
-#### If you want to convert this template to a regular project:
-
-1. Go to your repository settings on GitHub
-2. Scroll down to the "Template repository" section
-3. Uncheck the "Template repository" option
-4. This repository becomes a normal repo (no more "Use this template" button)
-
-### Best practices for template repositories
-
-- Keep template files generic and well-documented
-- Use placeholder values that users can easily find and replace
-- Include clear setup instructions (like this README!)
-- Don't include sensitive information (use `.env.example` files instead)
-- Test your template by creating a new project from it occasionally
-
-### API keys
-
-In .env you can find the following API keys should you need them.
-
-They are all correct and tested.
+## Running the audit
 
 ```
-OPENROUTER_API_KEY=""
-REPLICATE_API_TOKEN=""
-ASSEMBLYAI_API_KEY=""
+uv run python main.py
 ```
 
-The best LLMs to use through OpenRouter are currently:
+Useful flags:
 
-* For simple tasks: `deepseek/deepseek-chat-v3-0324`
-* For SOTA english language writing: `google/gemini-2.5-pro`
-* For SOTA tool-calling performance and instruction following: `anthropic/claude-sonnet-4`
-* Best cheap model able to use image inputs: `google/gemini-2.0-flash-001`
+- `--limit N` – only audit the first `N` URLs (great for spot checks).
+- `--concurrency N` – adjust how many pages are fetched in parallel (default 5).
+- `--input /path/to/file.csv` – change the source list (defaults to `seo-descriptions.csv`).
+- `--output /path/to/file.csv` – change where the issue report is written (defaults to `seo-descriptions-results.csv`).
 
-If you are using LLMs to retrieve data that will eventually be structured, you must use the Structured Outputs feature.
+The script overwrites the output file on each run so the report always reflects the latest crawl.
 
-More on this in docs/api-docs.
+## Reading the results
 
-## Cursor IDE Configuration
+`seo-descriptions-results.csv` has three columns:
 
-This template includes a `.vscode` folder with pre-configured settings for Cursor IDE. Since Cursor is based on VS Code, it uses the same configuration system.
+| Column       | Description                                                                                                                             |
+| ------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `URL`        | The page that was audited.                                                                                                              |
+| `Issue Type` | One of `Page 404`, `Fetch failed`, `Broken link`, `Absolute link to dev/prod domain`, `Link to lifeline.org.au`, or `Placeholder text`. |
+| `Snippet`    | A short summary that points you to the exact problem (failing href, offending text, etc.).                                              |
 
-### What's included:
+Fix the issues in Drupal, re-run the CLI, and verify the CSV no longer lists them.
 
-- **`settings.json`**: Editor preferences, Python settings, file handling, and Cursor-specific configurations
-- **`keybindings.json`**: Custom keyboard shortcuts for improved productivity
-- **`extensions.json`**: Recommended extensions for Python development and general productivity
+## Troubleshooting tips
 
-### How to use:
+- **401/403 errors** – double-check the Basic Auth values in `.env`.
+- **Timeouts** – reduce `--concurrency` or re-run with `--limit` for a smaller batch.
+- **Unexpected empty report** – confirm the CSV header contains a `link` or `url` column so the loader can find the targets.
 
-1. **Clone this template** to your new project
-2. **Open the project in Cursor** - it will automatically detect the `.vscode` folder
-3. **Install recommended extensions** - Cursor will prompt you to install the recommended extensions
-4. **Customize as needed** - modify the configuration files to match your preferences
-
-### Syncing across machines:
-
-To use these same settings on multiple machines:
-
-1. **Commit the `.vscode` folder** to your repository
-2. **Clone the project** on other machines
-3. **Open in Cursor** - settings will be automatically applied
-4. **Install extensions** when prompted
-
-### Customizing the configuration:
-
-- **Settings**: Edit `.vscode/settings.json` to change editor behavior, themes, and tool preferences
-- **Keybindings**: Modify `.vscode/keybindings.json` to add or change keyboard shortcuts
-- **Extensions**: Update `.vscode/extensions.json` to add or remove recommended extensions
-
-The configuration is designed for Python development with modern best practices, but you can easily adapt it for other languages or workflows.
+If you need to add new health checks, `main.py` is organized so you can plug more validators into the `process_row` function without rewriting the crawler.
