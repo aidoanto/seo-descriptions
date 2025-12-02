@@ -22,6 +22,7 @@ USER_AGENT = "seo-descriptions-audit/0.2 (+https://lifeline.org.au)"
 DEV_PROD_HOSTS = {
     "lla-drupal-app-prod.salmonground-819df123.australiaeast.azurecontainerapps.io",
     "lla-drupal-app-uat.victoriouspond-08331c17.australiaeast.azurecontainerapps.io",
+    "example.com",
 }
 
 BLOCKED_LIFELINE_HOSTS = {
@@ -40,13 +41,33 @@ PLACEHOLDER_CONTEXT = 80
 
 EXCLUDED_HREF_PREFIXES = ("mailto:", "tel:", "javascript:", "data:", "#")
 
+URL_FIELD_CANDIDATES = (
+    "link",
+    "url",
+    "full-link",
+    "full link",
+    "page url",
+    "page-url",
+)
+
+SEO_DESCRIPTION_FIELD_CANDIDATES = (
+    "seo description",
+    "seo-description",
+    "seo_description",
+    "seo desc",
+    "seo-description text",
+    "seo description text",
+)
+
 
 SoupElement = Union[BeautifulSoup, Tag]
 
 
 @dataclass
 class SourceRow:
-    url: str
+    raw_url: str
+    absolute_url: str
+    seo_description: Optional[str] = None
 
 
 @dataclass
@@ -97,28 +118,76 @@ def parse_args() -> argparse.Namespace:
     return args
 
 
-def load_source_rows(path: str) -> List[SourceRow]:
-    rows: List[SourceRow] = []
-    with open(path, newline="", encoding="utf-8") as csv_file:
-        reader = csv.DictReader(csv_file)
-        for raw in reader:
-            url = extract_url_from_row(raw)
-            if not url:
-                continue
-            rows.append(SourceRow(url=url))
-    return rows
-
-
-def extract_url_from_row(raw: Dict[str, str]) -> Optional[str]:
-    normalized = {
+def normalize_row(raw: Dict[str, str]) -> Dict[str, str]:
+    return {
         (key or "").strip().lower().lstrip("\ufeff"): (value or "").strip()
         for key, value in raw.items()
     }
-    for candidate in ("link", "url", "full-link", "full link", "page url", "page-url"):
+
+
+def extract_field(
+    normalized: Dict[str, str], candidates: Iterable[str]
+) -> Optional[str]:
+    for candidate in candidates:
         value = normalized.get(candidate)
         if value:
             return value
     return None
+
+
+def normalize_base_url(value: Optional[str]) -> Optional[str]:
+    if not value:
+        return None
+    trimmed = value.strip()
+    if not trimmed:
+        return None
+    parsed = urlparse(trimmed)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise RuntimeError(
+            "BASE_URL must include a scheme and hostname, e.g. https://example.com"
+        )
+    if not trimmed.endswith("/"):
+        trimmed += "/"
+    return trimmed
+
+
+def absolutize_url(url: str, base_url: Optional[str]) -> str:
+    trimmed = (url or "").strip()
+    if not trimmed:
+        raise RuntimeError("Encountered empty URL in the source CSV.")
+    parsed = urlparse(trimmed)
+    if parsed.scheme in {"http", "https"}:
+        return trimmed
+    if trimmed.startswith("//"):
+        return f"https:{trimmed}"
+    if not base_url:
+        raise RuntimeError(
+            "BASE_URL is required because some CSV rows do not include http:// or https:// (e.g. '/about')."
+        )
+    normalized_path = trimmed.lstrip("/")
+    return urljoin(base_url, normalized_path)
+
+
+def load_source_rows(path: str, base_url: Optional[str]) -> List[SourceRow]:
+    rows: List[SourceRow] = []
+    with open(path, newline="", encoding="utf-8") as csv_file:
+        reader = csv.DictReader(csv_file)
+        for raw in reader:
+            normalized = normalize_row(raw)
+            url = extract_field(normalized, URL_FIELD_CANDIDATES)
+            if not url:
+                continue
+            seo_description = extract_field(
+                normalized, SEO_DESCRIPTION_FIELD_CANDIDATES
+            )
+            rows.append(
+                SourceRow(
+                    raw_url=url,
+                    absolute_url=absolutize_url(url, base_url),
+                    seo_description=seo_description,
+                )
+            )
+    return rows
 
 
 def ensure_env(name: str) -> str:
@@ -231,7 +300,9 @@ def detect_absolute_links(
         if not link.was_absolute:
             continue
         if predicate(link.host):
-            issues.append(Issue(url=page_url, issue_type=issue_type, snippet=link_snippet(link)))
+            issues.append(
+                Issue(url=page_url, issue_type=issue_type, snippet=link_snippet(link))
+            )
     return issues
 
 
@@ -345,18 +416,31 @@ async def process_row(
     cache: Dict[str, Optional[int]],
 ) -> List[Issue]:
     async with semaphore:
-        print(f"[{idx}/{total}] Auditing {row.url}")
-        page_status, html, error = await fetch_page(web_client, row.url, auth)
+        print(f"[{idx}/{total}] Auditing {row.raw_url}")
+        page_status, html, error = await fetch_page(web_client, row.absolute_url, auth)
         issues: List[Issue] = []
 
+        if not row.seo_description:
+            issues.append(
+                Issue(
+                    url=row.raw_url,
+                    issue_type="Missing SEO description",
+                    snippet="SEO Description column is blank.",
+                )
+            )
+
         if page_status == "404":
-            issues.append(Issue(url=row.url, issue_type="Page 404", snippet="GET returned 404"))
+            issues.append(
+                Issue(
+                    url=row.raw_url, issue_type="Page 404", snippet="GET returned 404"
+                )
+            )
             return issues
 
         if page_status == "error":
             issues.append(
                 Issue(
-                    url=row.url,
+                    url=row.raw_url,
                     issue_type="Fetch failed",
                     snippet=error or "Unknown error",
                 )
@@ -365,12 +449,12 @@ async def process_row(
 
         soup = BeautifulSoup(html or "", "html.parser")
         root = get_audit_root(soup)
-        links = extract_page_links(root, row.url)
-        base_host = urlparse(row.url).netloc.lower()
+        links = extract_page_links(root, row.absolute_url)
+        base_host = urlparse(row.absolute_url).netloc.lower()
 
         issues.extend(
             detect_absolute_links(
-                page_url=row.url,
+                page_url=row.raw_url,
                 links=links,
                 predicate=lambda host: host in DEV_PROD_HOSTS,
                 issue_type="Absolute link to dev/prod domain",
@@ -379,7 +463,7 @@ async def process_row(
 
         issues.extend(
             detect_absolute_links(
-                page_url=row.url,
+                page_url=row.raw_url,
                 links=links,
                 predicate=lambda host: host in BLOCKED_LIFELINE_HOSTS,
                 issue_type="Link to lifeline.org.au",
@@ -388,7 +472,7 @@ async def process_row(
 
         issues.extend(
             await detect_broken_links(
-                page_url=row.url,
+                page_url=row.raw_url,
                 links=links,
                 base_host=base_host,
                 client=web_client,
@@ -397,7 +481,7 @@ async def process_row(
             )
         )
 
-        issues.extend(find_placeholder_text(row.url, root))
+        issues.extend(find_placeholder_text(row.raw_url, root))
 
         return issues
 
@@ -407,8 +491,9 @@ async def run_audit(args: argparse.Namespace) -> None:
 
     username = ensure_env("HTTP_USERNAME")
     password = ensure_env("HTTP_PASSWORD")
+    base_url = normalize_base_url(os.getenv("BASE_URL"))
 
-    source_rows = load_source_rows(args.input)
+    source_rows = load_source_rows(args.input, base_url)
     if args.limit:
         source_rows = source_rows[: args.limit]
 

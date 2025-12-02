@@ -9,13 +9,17 @@ For every page in the CSV the CLI will:
 
 1. Confirm the page itself does not return a 404.
 2. Look for internal links that return HTTP 4xx/5xx (broken links).
-3. Flag absolute links that still point at the legacy dev/prod domains:  
+3. Flag absolute links that still point at the legacy dev/prod domains or placeholder targets:  
    `https://lla-drupal-app-prod.salmonground-819df123.australiaeast.azurecontainerapps.io`  
-   `https://lla-drupal-app-uat.victoriouspond-08331c17.australiaeast.azurecontainerapps.io`
+   `https://lla-drupal-app-uat.victoriouspond-08331c17.australiaeast.azurecontainerapps.io`  
+   `https://example.com`
 4. Flag absolute links to `https://lifeline.org.au`, `https://www.lifeline.org.au`, or `https://toolkit.lifeline.org.au` (other Lifeline subdomains such as `give.` or `fundraise.` are allowed).
 5. Detect any visible text that still says “lorem ipsum” or “placeholder”.
+6. Report rows where the `SEO Description` column is empty so the content team knows to fill it in.
 
 Every issue becomes one CSV row with the page URL, the issue type, and a short snippet showing what needs attention.
+
+> Relative entries such as `home` or `/about` are fine in `seo-descriptions.csv`; the CLI combines them with `BASE_URL` before requesting the page.
 
 > ℹ️ The crawler inspects only the content inside the page’s `<main>` tag (when present) so inline scripts, nav bars, and footer widgets won’t generate noisy findings.
 
@@ -24,7 +28,8 @@ Every issue becomes one CSV row with the page URL, the issue type, and a short s
 1. Copy `.env.example` to `.env` and fill in:
    - `HTTP_USERNAME`
    - `HTTP_PASSWORD`
-     (These are required for the Drupal Basic Auth wall.)
+   - `BASE_URL` – the absolute origin (including `https://`) for the Drupal site you’re auditing.  
+     This lets the CLI turn CSV entries like `home` or `/about` into full URLs before fetching them.
 2. Install dependencies using [uv](https://github.com/astral-sh/uv):
 
    ```
@@ -48,6 +53,30 @@ Useful flags:
 - `--output /path/to/file.csv` – change where the issue report is written (defaults to `seo-descriptions-results.csv`).
 
 The script overwrites the output file on each run so the report always reflects the latest crawl.
+
+## Collecting external PDF references
+
+Use `collect_media.py` when you need to discover PDFs that live under `https://www.lifeline.org.au/media/` but are only linked from third‑party sites (so they were missed during the Drupal migration).
+
+```
+uv run python collect_media.py --download
+```
+
+What it does:
+
+- runs a set of Google queries via Serper (using `SERPER_API_KEY` from `.env`)
+- visits each non-Lifeline result page and scrapes links that point at the Lifeline media library
+- records the findings in `external-media.csv` and updates `pdfs.txt`
+- optionally downloads any newly discovered PDFs into `/pdfs`
+
+Helpful flags:
+
+- `--query 'custom search'` (repeatable) or `--queries-file queries.txt` to override the built-in search terms
+- `--per-page 5 --max-pages 2` to limit API usage
+- `--use-jina-reader` to proxy stubborn pages through the Jina Reader service (uses `JINA_API_KEY` when present)
+- `--download` to immediately fetch PDFs so the `/pdfs` folder stays up to date
+
+The generated `pdfs.txt` feeds straight into `download_pdfs.py` if you prefer to keep discovery and downloading as two separate steps.
 
 ## Reading the results
 
